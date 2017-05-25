@@ -71,9 +71,9 @@ process_execute (const char *file_name)
      ======================== */
 
   if(tid != TID_ERROR){
-      // 1.?
+    sema_down(exec->load_done); // wait for new user program to load
       if(exec->success){
-          list_push_back(&(thread_current()->children), exec->wait_status);
+        list_push_back(&(thread_current()->children), exec->wait_status);
       }
   }
   return tid;
@@ -102,7 +102,11 @@ static void start_process (void *exec_)
      4. Stop the parent process from waiting for the child process to be loaded.
      ======================== */
   if (success)
-  {   }
+  {   
+    struct wait_status *wait;
+    wait = malloc(sizeof(wait_status*));
+    //3? wait = 0;
+  }
 
   if (!success)
     thread_exit ();
