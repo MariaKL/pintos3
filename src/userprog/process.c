@@ -71,9 +71,12 @@ process_execute (const char *file_name)
      ======================== */
 
   if(tid != TID_ERROR){
-    sema_down(exec->load_done); // wait for new user program to load
+    sema_down(&exec->load_done); // wait for new user program to load
       if(exec->success){
         list_push_back(&(thread_current()->children), exec->wait_status);
+      }
+      else{
+          tid = TID_ERROR;
       }
   }
   return tid;
@@ -105,7 +108,16 @@ static void start_process (void *exec_)
   {   
     struct wait_status *wait;
     wait = malloc(sizeof(wait_status*));
-    //3? wait = 0;
+    wait->dead = 0;
+    wait->elem = thread_current()->elem;
+    wait->exit_code = -1;
+    lock_init(&wait->lock);
+    wait->ref_cnt = 2;
+    wait->tid = thread_current()->tid;
+    exec->wait_status = wait;
+    thread_current()->wait_status = wait;
+    exec->success = true;
+    sema_up(&exec->load_done);
   }
 
   if (!success)
@@ -124,6 +136,12 @@ static void start_process (void *exec_)
 /* Releases one reference to CS and, if it is now unreferenced, frees it. */
 static void release_child (struct wait_status *cs)
 {
+    lock_acquire(&cs->lock);
+    cs->ref_cnt--;
+    if(cs->ref_cnt<=0){
+        free(cs);
+    }
+    lock_release(&cs->lock);
 }
 
 /* Waits for thread TID to die and returns its exit status.  If
@@ -144,7 +162,28 @@ process_wait (tid_t child_tid)
       5. Call release_child().
       6. Return the exit code.
       ======================== */
+  
+  // if TID invalid, return -1
+  //
+    
+  bool found = false;
+  
+  struct list *childList = &thread_current()->children;
+  if(!list_empty(childList)){
+    struct list_elem *e;
+    for (e = list_begin (childList); e != list_end (childList); 
+            e = list_next (e)){ // from list.h example
+        struct thread *thread = list_entry(cur, struct thread, allelem);
+        if(thread->tid == child_tid){
 
+        }
+    }
+  }
+  
+  if(!found){
+      return -1;
+  }
+  
   return -1;
 }
 
