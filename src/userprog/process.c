@@ -57,6 +57,7 @@ process_execute (const char *file_name)
      ======================== */
   // TODO: will have to copy char by char until reach a space so as not to get the arguments
   strlcpy(thread_name, file_name, sizeof(thread_name)); 
+  
   /* start_process is the function to be called at the beginning of a new thread,
        &exec is a pointer to the auxiliary information */
   tid = thread_create (thread_name, PRI_DEFAULT, start_process, &exec);
@@ -73,7 +74,7 @@ process_execute (const char *file_name)
   if(tid != TID_ERROR){
     sema_down(&exec.load_done); // wait for new user program to load
     if(exec.success){
-      list_push_back(&(thread_current()->children), &(exec.wait_status->elem));
+      list_push_back(&thread_current()->children, &exec.wait_status->elem);
     }
     else{
         tid = TID_ERROR;
@@ -109,7 +110,7 @@ static void start_process (void *exec_)
     struct wait_status *wait;
     wait = malloc(sizeof(struct wait_status));
     
-    sema_init(&(wait->dead), 0);
+    sema_init(&wait->dead, 0);
     wait->elem = thread_current()->elem;
     wait->exit_code = 0;
     lock_init(&wait->lock);
@@ -138,9 +139,9 @@ static void start_process (void *exec_)
 /* Releases one reference to CS and, if it is now unreferenced, frees it. */
 static void release_child (struct wait_status *cs)
 {
-    lock_acquire(&(cs->lock));
+    lock_acquire(&cs->lock);
     cs->ref_cnt--;
-    lock_release(&(cs->lock));
+    lock_release(&cs->lock);
     if(cs->ref_cnt<=0){
       free(cs);
     }
@@ -175,7 +176,7 @@ process_wait (tid_t child_tid)
       e = list_next (e)){ // from list.h example
       struct wait_status *child = list_entry(e, struct wait_status, elem);
       if(child->tid == child_tid){
-        sema_down(&(child->dead));
+        sema_down(&child->dead);
         int exit_code = child->exit_code;
         release_child(child);
         return exit_code;
@@ -208,13 +209,13 @@ process_exit (void)
       3. Go through the child list.
       4. Release a reference to the wait_status of each child process.
       ======================== */
-  sema_up(&(cur->wait_status->dead));
-  release_child(&(cur->wait_status));
+  sema_up(&cur->wait_status->dead);
+  release_child(&cur->wait_status);
   
-  struct list *childList = &cur->children;
-  if(!list_empty(childList)){
+  struct list *children = &cur->children;
+  if(!list_empty(children)){
     struct list_elem *e;
-    for (e = list_begin (childList); e != list_end (childList); 
+    for (e = list_begin (children); e != list_end (children); 
         e = list_next (e)){ // from list.h example
       struct wait_status *child = list_entry(e, struct wait_status, elem);
       release_child(child);
