@@ -111,7 +111,6 @@ static void start_process (void *exec_)
     wait = malloc(sizeof(struct wait_status));
     
     sema_init(&wait->dead, 0);
-    wait->elem = thread_current()->elem;
     wait->exit_code = 0;
     lock_init(&wait->lock);
     wait->ref_cnt = 2;
@@ -142,10 +141,9 @@ static void release_child (struct wait_status *cs)
     lock_acquire(&cs->lock);
     cs->ref_cnt--;
     lock_release(&cs->lock);
-    if(cs->ref_cnt<=0){
+    if(cs->ref_cnt == 0){
       free(cs);
     }
-    
 }
 
 /* Waits for thread TID to die and returns its exit status.  If
@@ -198,8 +196,12 @@ process_exit (void)
 
   if (cur->wait_status != NULL)
   {
+    
     struct wait_status *cs = cur->wait_status;
+    //cs->exit_code=0;
     printf ("%s: exit(%d)\n", cur->name, cs->exit_code);
+    sema_up(&cs->dead);
+    release_child(cs);
   }
 
   /* =======================
@@ -209,10 +211,8 @@ process_exit (void)
       3. Go through the child list.
       4. Release a reference to the wait_status of each child process.
       ======================== */
-  sema_up(&cur->wait_status->dead);
-  release_child(&cur->wait_status);
   
-  struct list *children = &cur->children;
+  struct list *children = &cur->children; // cause otherwise it looks messy
   if(!list_empty(children)){
     struct list_elem *e;
     for (e = list_begin (children); e != list_end (children); 

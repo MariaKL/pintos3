@@ -213,7 +213,7 @@ static int sys_halt (void)
 /* Exit system call. */
 static int sys_exit (int exit_code)
 {
-    printf ("system call!\n");
+    //printf ("system call!\n");
     thread_exit ();
     return -1;
 }
