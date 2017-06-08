@@ -216,6 +216,7 @@ static int sys_exit (int exit_code)
     //printf ("system call!\n");
     thread_exit ();
     return -1;
+    //return exit_code;
 }
 
 /* Exec system call. */

@@ -3,11 +3,12 @@
 tests/%.output: FILESYSSOURCE = --filesys-size=2
 tests/%.output: PUTFILES = $(filter-out kernel.bin loader.bin, $^)
 
-tests/userprog_TESTS = $(addprefix tests/userprog/,args-none )		\
+tests/userprog_TESTS = $(addprefix tests/userprog/,args-none		\
+create-empty                                                            \
+)                                                                       \
 
-#only space no comma between test names
 #args-single args-multiple args-many args-dbl-space halt exit 		\
-#create-normal create-empty create-long create-exists open-normal	\
+#create-long create-normal create-exists open-normal                                                            \
 #open-missing open-twice close-normal read-normal read-zero		\
 #write-normal write-zero exec-once exec-multiple wait-simple wait-twice)
 

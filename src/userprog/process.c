@@ -196,7 +196,6 @@ process_exit (void)
 
   if (cur->wait_status != NULL)
   {
-    
     struct wait_status *cs = cur->wait_status;
     //cs->exit_code=0;
     printf ("%s: exit(%d)\n", cur->name, cs->exit_code);
